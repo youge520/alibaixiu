@@ -1,0 +1,98 @@
+<!-- 
+
+  1.先写一个接口文档（可以直接就看我写的文档，或者对着我的文档抄一下）
+
+  2.根据接口文档写了一个做登录的接口
+      2.1 先获取提交过来的数据
+      2.2 连接-查询-关闭数据库 （sql语句用select *from users where email='xxx' and password='xxx'）;
+      2.3 判断查询结果的长度是否大于0，如果大于0代表成功，否则失败，返回对应的json字符串
+      
+  3.回到本页面，先把提示信息的div隐藏给它一个id方便找到它，再把a标签的跳转阻止掉并给a标签加一个id方便找到它
+      3.1 给a注册点击事件
+      3.2 点击事件里，创建请求对象----设置请求行-请求头-发送请求（请求体），响应完成做判断，如果成功跳转到index.html，否则弹出提示
+
+
+  4.判断是否有登录
+      4.1 在做登录的接口里，如果登录成功，先把查到的用户信息存到session里
+      4.2 写一个接口用来判断是否有session
+      4.3 在后台每个页面一开始发起一个对上面接口的请求，如果没登录，打回登录页
+-->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <title>Sign in &laquo; Admin</title>
+  <link rel="stylesheet" href="../assets/vendors/bootstrap/css/bootstrap.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+
+<body>
+  <div class="login">
+    <form class="login-wrap">
+      <img class="avatar" src="../assets/img/default.png">
+      <!-- 有错误信息时展示 -->
+      <div id="tip" class="alert alert-danger" style="display: none;">
+        <strong>错误！</strong> 用户名或密码错误！
+      </div>
+      <div class="form-group">
+        <label for="email" class="sr-only">邮箱</label>
+        <input id="email" type="email" class="form-control" placeholder="邮箱" autofocus>
+      </div>
+      <div class="form-group">
+        <label for="password" class="sr-only">密码</label>
+        <input id="password" type="password" class="form-control" placeholder="密码">
+      </div>
+      <a id="login" class="btn btn-primary btn-block" href="javascript:void(0);">登 录</a>
+    </form>
+  </div>
+</body>
+
+</html>
+
+
+<script>
+
+  //找到提示信息
+  var tip = document.getElementById('tip');
+
+  //找到邮箱
+  var email = document.getElementById('email');
+  //找到密码
+  var password = document.getElementById('password');
+
+  //加点击事件
+  document.getElementById('login').onclick = function () {
+
+    //发请求并带入邮箱的值和密码的值
+    var xhr = new XMLHttpRequest();
+    xhr.open('post', 'api/doLogin.php');
+    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    xhr.send("email="+ email.value +"&password=" + password.value);
+
+    xhr.onreadystatechange = function () {
+
+      if (xhr.readyState == 4 && xhr.status == 200) {
+
+        // console.log(xhr.responseText);
+        // 转成JS对象
+        var obj = JSON.parse(xhr.responseText);
+
+        if(obj.msg == "ok"){
+
+          //登录成功
+          // alert('ok');
+          // 要跳转到首页index.html
+          location = "index.html";
+
+        }else{
+
+          tip.style.display = "block";
+        }
+
+      }
+    }
+  }
+
+</script>

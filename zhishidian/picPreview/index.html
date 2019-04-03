@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <!-- 选择文件的，它只能选择文件，但是绝对没有图片显示的功能，在html里面要显示图片，只有img，或者div的背景图片
+         所以如果要做图片预览，需要两个元素：1.img  2.file
+
+         file选择完的文件，都放在了file元素的files属性里
+         files是一个伪数组，对它取下标就是那个文件了
+
+
+         img要想显示图片，要给src属性，而src里面只能写路径才能显示
+
+         图片预览有两套方案：
+                    1. 临时url方案
+                            这一套使用更简单
+                            如果网页关闭，就失效
+                        URL.creatObjectURL(文件对象); 就会得到一个临时的路径
+
+                    2. 永久url方案
+                            一直存在
+    -->
+
+    <input type="file" id="file">
+    <img src="" alt="" id="icon">
+</body>
+</html>
+
+<script>
+
+    //找到file
+    var file = document.getElementById('file');
+    //找到img
+    var icon = document.getElementById('icon');
+
+    //没有，但是有类似的事件：值改变事件
+    file.onchange = function(){
+
+        // console.log('...');
+
+        // 找到选择的那张图片，再交给img去显示
+        // console.log(file.files[0]);
+        // icon.src = file.files[0];  这个会报错，因为src里只能给路径不能给对象
+
+        // 把图片对象转成一个临时的路径
+        // var url = URL.createObjectURL(file.files[0]);
+        // console.log(url);
+        // icon.src = url;
+        
+
+        //用永久
+        // var xhr = new XMLHttpRequest();
+        // xhr.open('post','picLoad.php');
+        // //加请求头
+        // xhr.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+        // // send里面写给服务器的数据
+        // // 而它要保持 key=value形式的字符串，数据都是字符串形式，而文件不是字符串，所以不好传递了
+        // // ajax1.0：无法异步上传文件！！！
+        // xhr.send("name=jack&age=16");
+
+        //ajax2.0时代： 解决的问题异步上传文件的问题！
+        //ajax2.0 其实跟1.0 用起来差不多！只是多了一个对象FormData对象，并且又不用再设置请求头了，因为它会自动帮你设置
+        //创建请求对象
+        var xhr = new XMLHttpRequest();
+        //设置请求方式请求路径
+        xhr.open('post','picLoad.php');
+
+        //创建了FormData对象，它是空的
+        var fm = new FormData();
+        //要让它里面带数据，带图片,调用append方法就可以带
+        fm.append('icon',file.files[0]);
+  
+        //传递fm就行了，因为fm里面有图片，所以你传递fm，就传递了图片
+        xhr.send(fm);
+
+        xhr.onreadystatechange = function(){
+
+            if(xhr.readyState == 4 && xhr.status == 200){
+
+                icon.src = xhr.responseText;
+            }
+        }
+    }
+
+
+
+</script>

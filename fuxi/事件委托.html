@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <input type="button" value="添加新的li" id="btn">
+    <ul>
+        <li>隔壁老王1</li>
+        <li>隔壁老王2</li>
+        <li>隔壁老王3</li>
+        <li>隔壁老王4</li>
+        <li>隔壁老王5</li>
+        <span>我是span</span>
+    </ul>
+</body>
+</html>
+
+<script src="../assets/vendors/jquery/jquery.min.js"></script>
+
+<script>
+
+    // 代表把事件加在ul身上，但是只能由它里面的li来触发
+    $('ul').on('click','li',function(){
+        
+        alert(123);
+    })
+    // $('li').click(function(){
+
+    //     alert(this.innerHTML);
+    // });
+
+    $('#btn').click(function(){
+
+        $('<li>新的li</li>').appendTo($('ul'));
+    });
+</script>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <!-- 
+
+        只要给父元素加点击事件，那么相当于原来的子元素，和新创建的子元素都会有点击事件，因为事件冒泡
+
+        e.target：       触发事件那个元素，事件源
+        e.currentTarget：当前处理事件的元素 
+        this： 当前处理事件的元素，它们相等 this == e.currentTarget
+
+
+        事件委托原理：
+            利用事件冒泡，把事件加在父盒子身上，并且在事件里做判断，事件源如果是我指定的某个子元素，那么才执行代码，否则不执行
+     -->
+</head>
+<body>
+    <input type="button" value="添加新的li" id="btn">
+    <ul>
+        <li>隔壁老王1</li>
+        <li>隔壁老王2</li>
+        <li>隔壁老王3</li>
+        <li>隔壁老王4</li>
+        <li>隔壁老王5</li>
+        <span>我是span</span>
+    </ul>
+</body>
+</html>
+
+<script>
+
+    //找到ul
+    var ul = document.getElementsByTagName('ul')[0];
+
+    //找到所有li
+    // var liList = document.getElementsByTagName('li');
+
+    // for(var i = 0; i < liList.length; i++){
+
+    //     liList[i].onclick = function(){
+
+    //         console.log(this.innerHTML);
+    //     }
+    // }
+
+
+    ul.onclick = function(e){
+
+        // this就是e.currentTarget
+        // console.log(this.innerHTML);
+
+        //谁点击就打印谁的innerHTML怎么办？
+        //谁被点就相当于谁是事件触发源
+        if(e.target.nodeName == 'LI')
+            console.log(e.target.innerHTML);
+        
+    }
+
+
+    document.getElementById('btn').onclick = function(){
+
+        var newLi = document.createElement('li');
+        newLi.innerHTML = "我是新的li";
+        ul.appendChild(newLi);
+    }
+</script>

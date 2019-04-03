@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <!-- 日期表单元素 -->
+    <input type="datetime-local" id="time">
+</body>
+</html>
+
+<script src="../assets/vendors/moment/moment.js"></script>
+
+<script>
+
+    function getNow() {
+
+
+        //获取当前时间
+        var now = new Date();
+        // console.log(now);
+        // 它支持的时间格式是：YYYY-MM-DDTHH:mm   4位年-2位月-2位日T2位时:2位分
+        // time.value = "1999-01-01T12:03";
+
+        //可以自己拼成这个格式!
+        //得到年
+        var year = now.getFullYear();
+        //得到月，注意：代码里的月份从0开始，所以记得加1
+        var month = now.getMonth() + 1;
+        // console.log(month);
+        month = month < 10 ? "0" + month : month;
+
+        //得到日,getDay得到的是一周中的第几天，也就是得到星期几
+        //星期1-6打印的分别都是1-6，但是星期天打印0,
+        // var day = now.getDay();
+        // console.log(day);
+        var day = now.getDate();
+        day = day < 10 ? "0" + day : day;
+
+        //得到时
+        var hour = now.getHours();
+        hour = hour < 10 ? "0" + hour : hour;
+        //得到分
+        var min = now.getMinutes();
+        min = min < 10 ? "0" + min : min;
+
+        return year + "-" + month + "-" + day + "T" + hour + ":" + min;
+    }
+
+    var time = document.getElementById('time');
+
+
+    //YYYY-MM-DDTHH:mm 
+    // time.value = getNow();
+
+    time.value = moment().format('YYYY-MM-DDTHH:mm');
+
+    //moment()代表获取当前时间，format代表让这个时间按某种格式来输出成字符串
+    console.log(moment().format('YYYY-MM-DDTHH:mm'));
+    // 如果在moment里传入时间，那么就会按你的时间来输出字符串
+    console.log(moment('1999-1-1 12:03').format('YYYY-MM-DDTHH:mm'));
+    
+
+
+
+</script>

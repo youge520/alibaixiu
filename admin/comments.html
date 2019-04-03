@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+
+<!-- 
+
+  1. 写了一个接口，用来查出分页的评论数据
+      1.1 接收2个参数，pageIndex,pageSize
+      1.2 计算出起始索引（limit左边数字），再准备好分页的sql语句（记得要连表查询，连posts表，条件是c.post_id=p.id）
+      1.3 执行sql查出数据，转成JSON输出
+
+  2. 当本页面加载完毕，发请求渲染数据
+      2.1 用jQuery发ajax请求
+      2.2 准备模板去生成
+            要根据状态的值，显示为不同的中文状态
+            要根据状态的值，给它不同的操作按钮
+      2.3 调用模板
+
+
+  3. 完成页码的显示
+      3.1 先修改上面的接口，让它可以既返回数据，又返回总页数
+            3.1.1 把之前的SQL语句不加limit,查出总数据，再取长度得到总数
+            3.1.2 再用 ceil( 总数 / 页容量) 得到总页数
+            3.1.3 把之前输出的注释掉
+            3.1.4 把分页数据和总页数拼成关系型数组，再转成JSON输出
+
+      3.2 改完了接口，之前的tr就没法正常生成了，所以调用模板时，要传入的不再是obj，而是obj.data
+
+      3.3 显示页码
+            3.3.1 准备一个生成页码的模板，用for循环，这个模板要挖一个坑，填总页数
+            3.3.2 模板里要判断当前是否为第一页，如果是，给它一个类叫active，否则不给
+            3.3.3 调用模板生成页码，加到ul里面
+
+
+  4. 完成修改评论
+      结论：不管是单行操作还是批量操作，都可以用同一条sql语句。
+            只不过单行只传1个id，批量传多个id，多个id之间用逗号隔开
+            既然SQL语句，也就是说，单行和批量可以用同一个接口，只不过传入不同的id
+
+      4.1. 先写了一个接口，接口接收status和ids两个参数，然后用where in的语句去修改数据库
+      4.2. 写了一个函数，这个函数里面对上面的接口发请求，只不过这个函数还需要接收2个形参：st,id
+      4.3. 在模板里给修改的三个a标签加行内点击事件，调用上面这个函数，并且传入自己对应的状态，以及它这一行的id
+      4.4  在函数请求成功以后做判断，如果成功刷新整个页面，否则提示失败
+      4.5  不能用整个页面刷新，要用局部刷新
+              4.5.1 先准备一个全局变量，记录当前页（就是在loadData函数一开始把全局变量赋值为形参page）
+              4.5.2 在修改的那个函数里如果修改成功，就调用loadData传入全局变量
+
+
+  5. 解决刷新bug
+      5.1 解决最后一页批量删除的问题
+          如果当前页是 最后一页 并且 做的是删除 并且 全选了
+              就刷新当前页-1
+          否则
+              刷新当前页
+
+      细节：我们要拿到最后一页，所以声明一个全局变量，在loadData的success里记录一下总页数
+
+    
+      5.2 解决单行最后一页删除的问题
+          如果当前页是 最后一页 并且 做的是删除 并且 只有一行数据了
+              就刷新上一页
+          否则
+              刷新当前页
+
+
+      5.3 解决全选后，跳转到其他页或者刷新页面全选还在的问题
+            在loadData函数一开始去掉全选，隐藏批量
+
+-->
+<html lang="zh-CN">
+
+<head>
+  <!-- 
+    一开始，就要判断有没有session
+    但是html无法访问session，所以要发一个请求给服务器，问服务器有没有session
+  -->
+  <script>
+    var xhr = new XMLHttpRequest();
+    xhr.open('get', 'api/checkLogin.php');
+    xhr.send();
+
+    xhr.onreadystatechange = function () {
+
+      if (xhr.readyState == 4 && xhr.status == 200) {
+
+        var obj = JSON.parse(xhr.responseText);
+
+        //如果不等于10000，代表没有登录
+        if (obj.code != 10000) {
+
+          //打回登录页面
+          location = 'login.html';
+        }
+      }
+    }
+  </script>
+  <meta charset="utf-8">
+  <title>Comments &laquo; Admin</title>
+  <link rel="stylesheet" href="../assets/vendors/bootstrap/css/bootstrap.css">
+  <link rel="stylesheet" href="../assets/vendors/font-awesome/css/font-awesome.css">
+  <link rel="stylesheet" href="../assets/vendors/nprogress/nprogress.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <script src="../assets/vendors/nprogress/nprogress.js"></script>
+
+  <style>
+    th,td{
+      max-width: 420px;
+    }
+  </style>
+
+
+</head>
+
+<body>
+  <script>NProgress.start()</script>
+
+  <div class="main">
+    <nav class="navbar">
+      <button class="btn btn-default navbar-btn fa fa-bars"></button>
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="profile.html"><i class="fa fa-user"></i>个人中心</a></li>
+        <li><a href="api/doLogout.php"><i class="fa fa-sign-out"></i>退出</a></li>
+      </ul>
+    </nav>
+    <div class="container-fluid">
+      <div class="page-title">
+        <h1>所有评论</h1>
+      </div>
+      <!-- 有错误信息时展示 -->
+      <!-- <div class="alert alert-danger">
+        <strong>错误！</strong>发生XXX错误
+      </div> -->
+      <div class="page-action">
+        <!-- show when multiple checked -->
+        <div class="btn-batch" style="display: none">
+          <button onclick="batchEdit( 'approved' );" class="btn btn-info btn-sm">批量批准</button>
+          <button onclick="batchEdit( 'rejected' );" class="btn btn-warning btn-sm">批量拒绝</button>
+          <button onclick="batchEdit( 'trashed' );" class="btn btn-danger btn-sm">批量删除</button>
+        </div>
+        <ul class="pagination pagination-sm pull-right">
+          <li><a href="#">上一页</a></li>
+          <li><a href="#">1</a></li>
+          <li><a href="#">2</a></li>
+          <li><a href="#">3</a></li>
+          <li><a href="#">下一页</a></li>
+        </ul>
+      </div>
+      <table class="table table-striped table-bordered table-hover">
+        <thead>
+          <tr>
+            <th class="text-center" width="40"><input type="checkbox"></th>
+            <th>作者</th>
+            <th>评论</th>
+            <th>评论在</th>
+            <th>提交于</th>
+            <th>状态</th>
+            <th class="text-center" width="100">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="danger">
+            <td class="text-center"><input type="checkbox"></td>
+            <td>大大</td>
+            <td>楼主好人，顶一个</td>
+            <td>《Hello world》</td>
+            <td>2016/10/07</td>
+            <td>未批准</td>
+            <td class="text-center">
+              <a href="post-add.html" class="btn btn-info btn-xs">批准</a>
+              <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
+            </td>
+          </tr>
+          <tr>
+            <td class="text-center"><input type="checkbox"></td>
+            <td>大大</td>
+            <td>楼主好人，顶一个</td>
+            <td>《Hello world》</td>
+            <td>2016/10/07</td>
+            <td>已批准</td>
+            <td class="text-center">
+              <a href="post-add.html" class="btn btn-warning btn-xs">驳回</a>
+              <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
+            </td>
+          </tr>
+          <tr>
+            <td class="text-center"><input type="checkbox"></td>
+            <td>大大</td>
+            <td>楼主好人，顶一个</td>
+            <td>《Hello world》</td>
+            <td>2016/10/07</td>
+            <td>已批准</td>
+            <td class="text-center">
+              <a href="post-add.html" class="btn btn-warning btn-xs">驳回</a>
+              <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="aside">
+    <div class="profile">
+      <img class="avatar" src="../uploads/avatar.jpg">
+      <h3 class="name">布头儿</h3>
+    </div>
+    <ul class="nav">
+      <li>
+        <a href="index.html"><i class="fa fa-dashboard"></i>仪表盘</a>
+      </li>
+      <li>
+        <a href="#menu-posts" class="collapsed" data-toggle="collapse">
+          <i class="fa fa-thumb-tack"></i>文章<i class="fa fa-angle-right"></i>
+        </a>
+        <ul id="menu-posts" class="collapse">
+          <li><a href="posts.html">所有文章</a></li>
+          <li><a href="post-add.html">写文章</a></li>
+          <li><a href="categories.html">分类目录</a></li>
+        </ul>
+      </li>
+      <li class="active">
+        <a href="comments.html"><i class="fa fa-comments"></i>评论</a>
+      </li>
+      <li>
+        <a href="users.html"><i class="fa fa-users"></i>用户</a>
+      </li>
+      <li>
+        <a href="#menu-settings" class="collapsed" data-toggle="collapse">
+          <i class="fa fa-cogs"></i>设置<i class="fa fa-angle-right"></i>
+        </a>
+        <ul id="menu-settings" class="collapse">
+          <li><a href="nav-menus.html">导航菜单</a></li>
+          <li><a href="slides.html">图片轮播</a></li>
+          <li><a href="settings.html">网站设置</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <script src="../assets/vendors/jquery/jquery.js"></script>
+  <script src="../assets/vendors/bootstrap/js/bootstrap.js"></script>
+  <script>NProgress.done()</script>
+</body>
+
+</html>
+
+<!-- 1.导入模板 -->
+<script src="../assets/vendors/template-web.js"></script>
+<!-- 2.准备数据的模板 -->
+<script type="text/html" id="tplTr">
+
+{{ each list value }}
+
+{{ if value.status == 'held' }}
+  <tr class="danger">
+{{ else }}
+  <tr>
+{{ /if }}
+      <td class="text-center"><input type="checkbox" value="{{ value.id }}"></td>
+      <td>{{ value.author }}</td>
+      <td>{{ value.content }}</td>
+      <td>《{{ value.title }}》</td>
+      <td>{{ value.created }}</td>
+
+    {{ if value.status == 'approved' }}
+      <td>已批准</td>
+    {{ else if value.status == 'held' }}
+      <td>待审核</td>
+    {{ else }}
+      <td>已拒绝</td>
+    {{ /if }}
+
+      <td class="text-center">
+      
+      {{ if value.status == 'approved' }}
+        <a href="javascript:editTr( 'rejected',{{ value.id }} );" class="btn btn-warning btn-xs">拒绝</a>
+      {{ else if value.status == 'held' }}
+        <a href="javascript:editTr( 'approved',{{ value.id }} );" class="btn btn-info btn-xs">批准</a>
+      {{ /if }}
+        
+        <a href="javascript:editTr( 'trashed',{{ value.id }} );" class="btn btn-danger btn-xs">删除</a>
+      </td>
+  </tr>
+{{ /each }}
+</script>
+
+<!-- 2.2 准备一个生成页码的模板 -->
+<script type="text/html" id="tplPage">
+
+{{ if currentPage == 1 }}
+  <li><a href="javascript:loadData( {{totalPages}} )">上一页</a></li>
+{{ else }}
+  <li><a href="javascript:loadData( {{ currentPage - 1 }} )">上一页</a></li>
+{{ /if }}
+
+<% for(var i = 1; i <= totalPages; i++){ %>
+
+{{ if i == currentPage }}
+  <li class="active">
+{{ else }}
+  <li>
+{{ /if }}
+    <a href="javascript:loadData( {{ i }} );">{{ i }}</a>
+  </li>
+
+<% } %>
+  <!-- 如果当前页 等于 最后一页 ， 就要点击下一页跳到第一页，否则还是当前页+1 -->
+  {{ if currentPage == totalPages }}
+    <li><a href="javascript:loadData( 1 );">下一页</a></li>
+  {{ else }}
+    <li><a href="javascript:loadData( {{ currentPage + 1 }} );">下一页</a></li>
+  {{ /if }}
+
+</script>
+
+<script>
+
+  //声明一个全局变量去记录当前页和总页数
+  var globalPage,totalPages;
+
+  //加载数据的函数
+  function loadData(page) {
+
+    //去掉全选
+    $('thead :checkbox').prop('checked',false);
+    //隐藏批量操作
+    $('.btn-batch').fadeOut();
+
+    //记录当前页
+    globalPage = page;
+
+    //因为page为几就代表加载第几页数据，也就是说当前页就是page页
+
+    //发请求，去获取评论数据
+    $.get({
+      url: "api/getComments.php",
+      data: { pageIndex: page, pageSize: 10 },
+      dataType: "json",
+      success: function (obj) {
+
+        //记录总页数
+        totalPages = obj.totalPages
+
+        console.log(obj);
+        var html = template('tplTr', { list: obj.data });
+        //加到tbody
+        $('tbody').html(html);
+
+        //调用生成页码的模板
+        var html2 = template('tplPage', { totalPages: obj.totalPages, currentPage: page });
+        $('.pagination').html(html2);
+      }
+    });
+  }
+
+  //页面一打开默认加载第一页数据
+  loadData(1);
+
+
+  // 找到thead里的checkbox也就是找到那个全选
+  $('thead :checkbox').click(function () {
+
+    // alert(123);
+    // 全选如果是true，那么让下面的都是true，全选如果是false,那么让下面的都是false
+    $('tbody :checkbox').prop('checked', this.checked);
+
+    // 如果全选了要显示批量操作
+    if (this.checked) {
+
+      $('.btn-batch').fadeIn();
+
+    } else {
+      //否则要隐藏批量操作
+      $('.btn-batch').fadeOut();
+    }
+  });
+
+
+  // 新的checkbox没有点击事件
+  // $('tbody :checkbox').click(function(){
+
+  //   alert(123);
+  // });
+
+  $('tbody').on('click', ':checkbox', function () {
+
+    //如果tbody里面选中的checkbox数量等于tbody里面所有的checkbox总数
+    //就代表都选中了，那就要让全选勾上
+    // if( $('tbody :checked').length == $('tbody :checkbox').length ){
+
+    //     $('thead :checkbox').prop('checked',true);
+
+    // }else{
+
+    //     $('thead :checkbox').prop('checked',false);
+    // }
+
+    //下面和上面那一坨效果一样
+    $('thead :checkbox').prop('checked', $('tbody :checked').length == $('tbody :checkbox').length);
+
+
+    //如果选中的数量大于0，就要显示出批量操作
+    if ($('tbody :checked').length > 0) {
+
+      $('.btn-batch').fadeIn();
+
+    } else {
+
+      //否则隐藏批量操作
+      $('.btn-batch').fadeOut();
+    }
+
+
+  });
+
+
+  //单行修改评论的点击事件
+  function editTr(st, id) {
+
+    //发请求给接口
+    $.post({
+      url: "api/editComments.php",
+      data: { status: st, ids: id },
+      dataType: "json",
+      success: function (obj) {
+
+        // console.log(obj);
+        //如果修改成功要刷新页面
+        if (obj.msg == "ok") {
+          //刷新整个页面，相当于按了F5
+          // location.reload();
+
+          //调用自己封装的加载数据的函数（因为它是局部刷新）
+
+          //如果是最后一页，而且是删除，而且只有一行数据了
+          if(globalPage == totalPages && st == 'trashed' && $('tbody tr').length == 1)
+            loadData(globalPage - 1);
+          else
+            //刷新当前页
+            loadData(globalPage);
+
+        } else {
+
+          alert('修改失败');
+        }
+
+      }
+    });
+  }
+
+  //批量修改评论的点击事件
+  function batchEdit(st) {
+
+   
+    //准备一个变量用来拼接id
+    var str = "";
+
+    //取到每一个被选中的checkbox的value属性
+    //参数1：是遍历数组的下标
+    //参数2：就是被遍历的那个元素
+    //一定要先把id存在checkbox的value里你才能取到！！
+    $('tbody :checked').each(function(index,ele){
+
+      // console.log(index);
+      // console.log(ele.value);
+      str += ele.value + ",";
+      
+    });
+
+    // 去掉最后一个逗号
+    // 参数1：从哪个下标开始截取
+    // 参数2：截取多少个长度
+    str = str.substr(0,str.length - 1);
+  
+    // 多个id之间要用逗号连接  1，3,5,8,10
+    $.post({
+
+      url: "api/editComments.php",
+      data: { status: st, ids: str },
+      dataType: "json",
+      success: function (obj) {
+
+        if (obj.msg == "ok") {
+
+          //如果当前页是最后一页并且点的是删除而且选中了所有，就刷新上一页
+        if( globalPage == totalPages && st == "trashed" && $('thead :checked').length > 0)
+          loadData(globalPage - 1);
+        else
+          //刷新当前页
+          loadData(globalPage);
+
+        } else {
+
+          alert('修改失败！');
+        }
+      }
+    });
+  }
+</script>

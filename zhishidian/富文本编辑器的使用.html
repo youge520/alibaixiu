@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <!-- 
+        使用步骤：
+                1.导入插件
+                2.准备一个div，这个div后面会成为富文本编辑器
+                3.创建一个富文本对象：调用初始化方法  new wangEditor(传入div的id);
+                4.调用对象的create方法就能看到富文本了
+
+
+        富文本对象.txt.html(); 如果获取内容的时候，会获取到标签和行内样式
+        富文本对象.txt.text(); 获取内容的时候，获取到纯文本
+
+
+        但是如果赋值的话，它们没区别！传入标签都能解析！
+
+     -->
+</head>
+
+<body>
+    <div id="box"></div>
+
+    <input type="button" value="获取html" id="btn1">
+    <input type="button" value="获取text" id="btn2">
+    <input type="button" value="设置html" id="btn3">
+    <input type="button" value="设置text" id="btn4">
+</body>
+
+</html>
+
+<script src="../assets/vendors/wangEditor.min.js"></script>
+
+<script>
+    // 创建富文本对象
+    var editor = new wangEditor('#box');
+
+    editor.create();
+
+
+    document.getElementById('btn1').onclick = function () {
+
+        //获取html，获取的是带标签和样式的内容
+        console.log(editor.txt.html());
+
+    }
+
+    document.getElementById('btn2').onclick = function () {
+
+        //获取text，获取的是纯文本
+        console.log(editor.txt.text());
+
+    }
+
+
+    document.getElementById('btn3').onclick = function () {
+
+        editor.txt.html('<h2>我是h2</h2>');
+    }
+
+
+    document.getElementById('btn4').onclick = function () {
+
+        editor.txt.text('<h2>我是h2</h2>');
+    }
+</script>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <!-- 
+        FormData细节：
+                1.用FormData的时候要用post请求
+
+                2.想发送几个数据就可以调用几次append方法来添加数据
+
+                3.在创建FormData的时候传入一个表单对象,它能找到这个表单里所有带name属性的表单元素的值，传递给服务器
+                类似 jQuery中的表单序列化 $(表单).serialize(); 表单序列化拿不到文件，但是FormData可以拿到
+
+                4.传入表单对象时，只能传DOM对象，jQuery对象不行！
+
+        如果在jQuery的ajax里要用FormData，那么需要加两句话
+                contentType:false,
+                processData:false
+     -->
+</head>
+<body>
+
+    <form action="">
+
+        <input type="text" placeholder="请输入姓名" name="user">
+        <input type="text" placeholder="请输入年龄" name="age">
+        <input type="text" placeholder="请输入职业" name="job">
+        <input type="text" placeholder="请输入薪资" name="salary">
+        <input type="file" name="icon">
+
+        <div name="box">我是div</div>
+
+        
+        <input type="button" value="点我发请求" id="btn">
+
+        <input type="button" value="点我发jQuery的ajax" id="btn2">
+
+
+    </form>
+</body>
+</html>
+
+<script src="./jquery-1.12.4.min.js"></script>
+
+<script>
+    //找到表单
+    var form = document.getElementsByTagName('form')[0];
+
+    // 点击事件 
+    document.getElementById('btn').onclick = function(){
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('post','data.php');
+
+    
+        // var fm = new FormData();
+        // fm.append('name','jack');
+        // fm.append('age',16);
+        // fm.append('age',16);
+
+        // 在创建FormData的时候传入一个表单对象
+        // var fm = new FormData(form);
+        // 只能传DOM的表单对象，jQuery对象没用！！
+        // var fm = new FormData( $('form') );
+        
+        // 对jQuery对象取下标就代表把它转成DOM对象
+        var fm = new FormData( $('form')[0] );
+
+        fm.append('box','我是box');
+
+
+        xhr.send(fm);
+
+        xhr.onreadystatechange = function(){
+
+            if(xhr.readyState == 4 && xhr.status == 200){
+
+                console.log(xhr.responseText);
+                
+            }
+        }
+    }
+
+
+    $('#btn2').click(function(){
+
+        //拿到所有的带name属性的表单元素
+        var fm = new FormData( $('form')[0] );
+
+        //我们传数据，应该写key=value&key2=value2这种形式的字符串，但是jQuery允许我们传对象
+        //传对象会自动把它转成上面形式的字符串
+        //相当于就是会把data属性对应那个对象转成字符串，例：data: { name:"jack",age:16 },   把右边的对象转成字符串
+        //而你写formdata对象，它也是个对象，但是它不需要转换，也转不成功
+        //解决办法：告诉jQuery，你不要帮我把data对应的对象转成字符串
+        //还有个问题：服务器拿到数据是一堆乱码，原因：jQuery会自动帮我们加请求头，用FormData也不需要加请求头，因为FormData会自动帮我们加请求头，因为它们两都会加请求头所以冲突了
+        //解决办法：告诉jQuery，你不要帮我加请求头
+        $.post({
+            url:"data.php",
+            data: fm,  
+            // 告诉jQuery不要把fm转成字符串
+            processData:false,
+            // 告诉jQuery，不要帮我加请求头
+            contentType:false,
+            success:function(obj){
+
+                console.log(obj);
+                
+            }
+        });
+    });
+</script>

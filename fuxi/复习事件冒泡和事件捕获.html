@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <!-- 
+        e.target：找到事件源，也就是事件触发的那个元素
+        e.currentTarget：找到当前正在处理事件的那个元素
+        this: 当前处理事件的那个元素是谁，那么this就是谁
+                更通俗易懂：this 就是 e.currentTarget
+     -->
+    <style>
+        .father {
+            width: 200px;
+            height: 200px;
+            background-color: #f00;
+        }
+
+        .son {
+            width: 100px;
+            height: 100px;
+            background-color: #0f0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="father">
+        <div class="son"></div>
+    </div>
+</body>
+
+</html>
+
+<script>
+    // 直接找到son
+    var son = document.getElementsByClassName('son')[0];
+    var father = document.getElementsByClassName('father')[0];
+
+    son.onclick = function (e) {
+
+        alert('son');
+    }
+
+    father.onclick = function (e) {
+
+        // alert('father');
+        console.log(e.target);
+        console.log(e.currentTarget);
+        console.log(this);
+        
+        console.log('----------father-------------');
+        
+        
+    }
+
+    document.body.onclick = function (e) {
+
+        // alert('body');
+        console.log(e.target);
+        console.log(e.currentTarget);
+        console.log(this);
+        
+        console.log('----------body-------------');
+    }
+
+    document.documentElement.onclick = function (e) {
+
+        // alert('html');
+        console.log(e.target);
+        console.log(e.currentTarget);
+        console.log('----------html-------------');
+    }
+
+    document.onclick = function (e) {
+
+        // alert('document');
+        console.log(e.target);
+        console.log(e.currentTarget);
+        console.log('----------document-------------');
+    }
+
+    window.onclick = function (e) {
+
+        // alert('window');
+        console.log(e.target);
+        console.log(e.currentTarget);
+    }
+
+
+    // 给true就是捕获
+    // window.addEventListener('click', function (e) {
+
+    //     alert('window:buhuo');
+    // }, true);
+
+    // document.addEventListener('click', function () {
+
+    //     alert('document:buhuo');
+    // }, true);
+
+    // document.documentElement.addEventListener('click', function () {
+
+    //     alert('html:buhuo');
+    // }, true);
+    // document.body.addEventListener('click', function () {
+
+    //     alert('body:buhuo');
+    // }, true);
+
+    // father.addEventListener('click', function () {
+
+    //     alert('father:buhuo');
+    // }, true);
+</script>

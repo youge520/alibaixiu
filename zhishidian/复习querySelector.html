@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <!-- 
+         document.querySelector：
+                    可以通过选择器找到某个元素
+                    如果匹配多个，只找到第一个
+
+                    css选择器怎么写，它也怎么写，css选择器能找到什么，它也能找到什么，只不过它只找到第一个
+                    直接返回的就是DOM对象
+
+        document.querySelectorAll:
+                不管有多少个，返回的都是伪数组！
+                不管传什么选择器，都是伪数组
+     -->
+
+    <style>
+        p{
+
+        }
+
+        .book{
+
+        }
+        #box{
+
+        }
+    </style>
+</head>
+<body>
+    <p>这是p</p>
+    <p>这是p2</p>
+    <span class="book">这是span</span>
+    <div id="box">div</div>
+</body>
+</html>
+
+<script>
+    //我要分别找到p标签，span,div
+    // document.getElementsByTagName('p')[0]; //哪怕只找到一个也是返回的伪数组
+
+    // 能不能JS里也可以通过选择器找到元素，可以，但是用querySelector方法
+    // 传入选择器
+    var p = document.querySelector('p');
+    console.log(p);
+
+    var book = document.querySelector('.book');
+    console.log(book);
+
+    var box = document.querySelector('#box');
+    console.log(box);
+    
+    
+
+    //比如我要找表单
+    var form = document.querySelector('form');
+
+
+    var pList = document.querySelectorAll('p');
+    console.log(pList);
+
+    //伪数组
+    var spanList = document.querySelectorAll('.book');
+    console.log(spanList);
+
+    //伪数组
+    var box = document.querySelectorAll('#box');
+    console.log(box);
+    
+    
+    
+    
+</script>

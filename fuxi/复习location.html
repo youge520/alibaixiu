@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <!-- 
+        JS：ECMAScript、DOM、BOM
+
+        BOM:操作浏览器的一套API
+            navigator：可以得到浏览器的一些信息
+            location：地址栏
+            history：历史记录
+
+        window浏览器对象！也是JS的顶级对象
+        window代表的就是浏览器
+        只是window里包含了两套操作的API，一套是BOM,一套是DOM
+
+        window.document.create
+        window.history.back
+     -->
+</head>
+<body>
+    
+    <input type="button" value="获取网址" id="btn1">
+    <input type="button" value="设置网址" id="btn2">
+
+</body>
+</html>
+
+<script>
+
+    document.getElementById('btn1').onclick = function(){
+
+        console.log(location.href);
+        
+    }
+
+    document.getElementById('btn2').onclick = function(){
+
+        // location.href = "http://www.baidu.com";
+
+        // 如果是做网页跳转，href属性可以省略
+        location = "http://www.baidu.com";
+    }
+</script>

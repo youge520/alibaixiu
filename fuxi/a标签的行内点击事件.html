@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <!-- 
+
+        a标签默认就自带了点击事件，只不过点击事件的默认行为是跳转到href里指定的网页
+
+        阻止跳转：
+                给它手动再加一个点击事件：点击事件里面 return false  或者 e.preventDefault();
+
+                把href改为：javascript:void(0);
+    -->
+</head>
+<body>
+    <a href="http://www.itcast.cn">点我</a>
+
+    <!-- 当它被点击的时候，相当于告诉它这次跳转交给js去处理，js：后面的内容就代表处理方式
+        void(0)代表空，也就是说空处理，空处理就是说不处理
+    -->
+    <a href="javascript:void(0);">点我2</a>
+
+    <!-- 给这个a标签加了一个行内点击事件，当它被点击时弹出213 -->
+    <a href="javascript:alert(213);">点我3</a>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <!-- 
+        :checkbox  找到所有checkbox
+        :checked   找到所有被选中的checkbox
+     -->
+</head>
+
+<body>
+    <input type="text" placeholder="请输入账号">
+    <input type="password" placeholder="请输入密码">
+
+    <input type="checkbox" id="chk1">
+    <input type="checkbox" id="chk2">
+
+    <div>
+        <input type="checkbox" id="chk3">
+        <input type="checkbox" id="chk4">
+    </div>
+
+    <input type="button" value="点我获取所有checkbox" id="btn">
+
+    <input type="button" value="找到所有被选中的checkbox" id="btn2">
+</body>
+
+</html>
+
+<script src="../assets/vendors/jquery/jquery.min.js"></script>
+
+<script>
+
+    // 按钮的点击事件
+    $('#btn').click(function () {
+
+        //    console.log( $('input[type=checkbox]'));
+
+        // 找到4个，也就是所有
+        console.log($(':checkbox'));
+        // 找到2个
+        console.log($('div :checkbox'));
+
+
+    });
+
+
+    $('#btn2').click(
+        function(){
+
+            //找到所有被选中的checkbox
+            console.log($(':checked'));
+            //找到div里面所有被选中的checkbox
+            console.log($('div :checked'));
+            
+        }
+    );
+</script>
